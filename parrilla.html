@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parrilla CDA 13 | Aprobaciones</title>
+
+  <!-- Tailwind (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- html2pdf -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    * { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    .glass { backdrop-filter: blur(10px); background: rgba(255,255,255,0.75); }
+    .shadow-soft { box-shadow: 0 10px 35px rgba(0,0,0,0.10); }
+    .btn { @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-semibold transition; }
+    .btn-primary { @apply bg-slate-900 text-white hover:bg-slate-800; }
+    .btn-ghost { @apply bg-white/70 hover:bg-white border border-slate-200; }
+    .pill { @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border; }
+    .pill-e { @apply bg-emerald-50 text-emerald-800 border-emerald-200; }
+    .pill-s { @apply bg-blue-50 text-blue-800 border-blue-200; }
+    .pill-m { @apply bg-violet-50 text-violet-800 border-violet-200; }
+    .pill-c { @apply bg-amber-50 text-amber-900 border-amber-200; }
+    .ring-ok { box-shadow: 0 0 0 3px rgba(16,185,129,0.25); }
+    .ring-no { box-shadow: 0 0 0 3px rgba(239,68,68,0.25); }
+  </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-900">
+  <!-- Header -->
+  <header class="sticky top-0 z-40">
+    <div class="glass border-b border-white/20">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
+        <div class="flex items-center gap-3">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-jAnp9C1mhpW1RVtR_MGWwnQLJGGf9Qg0Uw&s"
+            alt="Coldron Colombia"
+            class="w-12 h-12 rounded-2xl object-cover shadow-soft"
+            referrerpolicy="no-referrer"
+          />
+          <div>
+            <h1 class="text-white font-extrabold tracking-tight text-lg">Parrilla de Contenidos | CDA 13</h1>
+            <p class="text-white/70 text-sm">Aprobación + Observaciones + Exportar/Enviar</p>
+          </div>
+        </div>
+
+        <div class="ml-auto flex flex-wrap gap-2">
+          <button class="btn btn-ghost" onclick="loadLocal()">↩️ Cargar guardado</button>
+          <button class="btn btn-ghost" onclick="saveLocal()">💾 Guardar</button>
+          <button class="btn btn-ghost" onclick="downloadJSON()">⬇️ JSON</button>
+          <button class="btn btn-ghost" onclick="downloadTXT()">🧾 TXT</button>
+          <button class="btn btn-ghost" onclick="exportPDF()">📄 PDF</button>
+          <button class="btn btn-primary" onclick="composeEmail()">✉️ Enviar correo</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6">
+    <!-- Top controls -->
+    <section class="glass rounded-3xl p-5 shadow-soft border border-white/20">
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="md:col-span-2">
+          <h2 class="text-slate-900 font-extrabold text-xl">Checklist editorial (con hook obligatorio)</h2>
+          <p class="text-slate-700 mt-1">
+            Marca <b>👍 aprobado</b> o <b>👎 desaprobado</b> por pieza y deja observaciones para ajustes.  
+            Luego exportas PDF o abres el correo con el resumen listo.
+          </p>
+
+          <div class="mt-4 grid sm:grid-cols-2 gap-3">
+            <label class="block">
+              <span class="text-sm font-semibold text-slate-700">Proyecto / Cliente</span>
+              <input id="projectName" class="mt-1 w-full rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-400"
+                     value="CDA 13 - Parrilla Mensual" />
+            </label>
+
+            <label class="block">
+              <span class="text-sm font-semibold text-slate-700">Mes / Periodo</span>
+              <input id="periodName" class="mt-1 w-full rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-400"
+                     placeholder="Ej: Marzo 2026" />
+            </label>
+
+            <label class="block sm:col-span-2">
+              <span class="text-sm font-semibold text-slate-700">Correo adicional (opcional)</span>
+              <input id="extraEmail" type="email" class="mt-1 w-full rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-400"
+                     placeholder="Ej: tucliente@correo.com (puedes poner varios separados por coma)" />
+            </label>
+          </div>
+        </div>
+
+        <div class="rounded-3xl bg-white/70 border border-slate-200 p-4">
+          <h3 class="font-extrabold text-slate-900">Leyenda de pilares</h3>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <span class="pill pill-e">E Educativo</span>
+            <span class="pill pill-s">S Servicio/Conversión</span>
+            <span class="pill pill-m">M Marca/Confianza</span>
+            <span class="pill pill-c">C Comunidad</span>
+          </div>
+          <div class="mt-4 text-sm text-slate-700">
+            Tip: si un hook no “patea la puerta”, cámbialo por:
+            <ul class="list-disc ml-5 mt-2">
+              <li>“Si te pasa esto…”</li>
+              <li>“Nadie te dice esto…”</li>
+              <li>“Te ahorras plata si…”</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Table -->
+    <section class="mt-6 glass rounded-3xl shadow-soft border border-white/20 overflow-hidden">
+      <div class="p-4 flex items-center gap-3">
+        <h2 class="text-lg font-extrabold">Parrilla (editable)</h2>
+        <button class="btn btn-ghost ml-auto" onclick="addRow()">➕ Añadir contenido</button>
+      </div>
+
+      <div class="overflow-auto">
+        <table class="w-full min-w-[1100px] border-t border-white/20">
+          <thead class="bg-white/60">
+            <tr class="text-left text-sm">
+              <th class="p-3 font-extrabold">Semana</th>
+              <th class="p-3 font-extrabold">Formato</th>
+              <th class="p-3 font-extrabold">Pilar</th>
+              <th class="p-3 font-extrabold">Tema / Pieza</th>
+              <th class="p-3 font-extrabold">Hook (inicio)</th>
+              <th class="p-3 font-extrabold">Aprobar</th>
+              <th class="p-3 font-extrabold">Observaciones</th>
+            </tr>
+          </thead>
+          <tbody id="rows" class="bg-white/70"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Summary / Export Area -->
+    <section class="mt-6 grid lg:grid-cols-2 gap-6">
+      <div class="glass rounded-3xl p-5 shadow-soft border border-white/20">
+        <h2 class="text-lg font-extrabold">Resumen listo para enviar / exportar</h2>
+        <p class="text-slate-700 text-sm mt-1">Se actualiza con el botón “Actualizar resumen” o al exportar/enviar.</p>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button class="btn btn-ghost" onclick="updateSummary()">🔄 Actualizar resumen</button>
+          <button class="btn btn-primary" onclick="composeEmail()">✉️ Enviar correo</button>
+          <button class="btn btn-ghost" onclick="exportPDF()">📄 Exportar PDF</button>
+        </div>
+      </div>
+
+      <div id="summaryCard" class="rounded-3xl bg-white/85 p-5 shadow-soft border border-slate-200">
+        <div class="flex items-center gap-3">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-jAnp9C1mhpW1RVtR_MGWwnQLJGGf9Qg0Uw&s"
+            alt="Coldron Colombia"
+            class="w-10 h-10 rounded-2xl object-cover"
+            referrerpolicy="no-referrer"
+          />
+          <div>
+            <div class="font-extrabold text-slate-900" id="summaryTitle">Resumen CDA 13</div>
+            <div class="text-xs text-slate-600" id="summaryMeta">Aprobaciones y observaciones</div>
+          </div>
+        </div>
+
+        <pre id="summaryText" class="mt-4 whitespace-pre-wrap text-sm text-slate-800 bg-slate-50/70 border border-slate-200 rounded-2xl p-4 overflow-auto max-h-[420px]"></pre>
+      </div>
+    </section>
+
+    <footer class="mt-10 text-center text-white/70 text-sm">
+      Hecho para que el equipo revise rápido: 👍 / 👎, comentarios y listo.  
+    </footer>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "cda13_parrilla_v1";
+
+    const defaultRows = [
+      // Semana 1
+      { week: "Semana 1", format: "Reel", pillar: "E", title: "5 razones por las que NO pasan la tecnomecánica", hook: "Si tu carro pierde la tecnomecánica por esto… no eres el único. Estas son las 5 más comunes 👀", approval: "pending", notes: "" },
+      { week: "Semana 1", format: "Carrusel", pillar: "E", title: "5 motivos por los que te pueden reprobar (slides)", hook: "¿Te han rebotado la tecnomecánica? Apuesto que fue por una de estas 5.", approval: "pending", notes: "" },
+      { week: "Semana 1", format: "Reel", pillar: "S", title: "Cómo agendar en CDA 13 (en 15 segundos)", hook: "¿Necesitas tecnomecánica y quieres hacerlo sin perder tiempo? Mira esto.", approval: "pending", notes: "" },
+      { week: "Semana 1", format: "Story", pillar: "C", title: "Encuesta: ¿Te han rebotado alguna vez?", hook: "Pregunta rápida 👇 ¿Alguna vez te reprobaron la tecnomecánica?", approval: "pending", notes: "" },
+
+      // Semana 2
+      { week: "Semana 2", format: "Reel", pillar: "E", title: "Checklist 24 horas antes de tu tecnomecánica", hook: "Antes de ir a la tecnomecánica, haz esto en 60 segundos y te ahorras el mal rato.", approval: "pending", notes: "" },
+      { week: "Semana 2", format: "Carrusel", pillar: "E", title: "Checklist visual (luces, llantas, frenos…)", hook: "Guárdalo: este checklist te puede salvar la tecnomecánica ✅", approval: "pending", notes: "" },
+      { week: "Semana 2", format: "Reel", pillar: "M", title: "Detrás de cámaras: así se hace una revisión seria", hook: "¿Qué pasa detrás de la tecnomecánica? Te lo muestro sin misterio.", approval: "pending", notes: "" },
+      { week: "Semana 2", format: "Story", pillar: "C", title: "Cajita de preguntas: dudas de tecnomecánica", hook: "Déjame tu duda aquí y te la respondo con peras y manzanas 🍐🍎", approval: "pending", notes: "" },
+
+      // Semana 3
+      { week: "Semana 3", format: "Reel", pillar: "E", title: "Señales de frenos para NO esperar a la tecnomecánica", hook: "Si tu carro hace esto al frenar… no esperes a que te lo diga el CDA.", approval: "pending", notes: "" },
+      { week: "Semana 3", format: "Carrusel", pillar: "E", title: "¿Qué revisan en un CDA? (puntos clave)", hook: "¿Qué miran exactamente en la tecnomecánica? Te lo dejo clarito.", approval: "pending", notes: "" },
+      { week: "Semana 3", format: "Reel", pillar: "S", title: "3 cosas que debes traer el día de la cita", hook: "Antes de venir al CDA, trae esto y evitas vueltas innecesarias.", approval: "pending", notes: "" },
+      { week: "Semana 3", format: "Story", pillar: "M", title: "Testimonio corto (texto + foto, sin datos personales)", hook: "Esto fue lo que nos dijo un cliente después de su revisión ✅", approval: "pending", notes: "" },
+
+      // Semana 4
+      { week: "Semana 4", format: "Reel", pillar: "E", title: "Emisiones: 3 señales de alerta", hook: "Si sientes olor fuerte o ves humo… ojo: esto te puede afectar en emisiones.", approval: "pending", notes: "" },
+      { week: "Semana 4", format: "Carrusel", pillar: "M", title: "Preguntas frecuentes CDA 13 (FAQ)", hook: "Te respondo las dudas que más nos dejan en el chat 👇", approval: "pending", notes: "" },
+      { week: "Semana 4", format: "Reel", pillar: "S", title: "Últimos cupos de la semana: agenda aquí", hook: "Si lo dejas para el final… luego toca correr. Agenda ya y listo.", approval: "pending", notes: "" },
+      { week: "Semana 4", format: "Story", pillar: "C", title: "Quiz: mitos comunes (Verdadero/Falso)", hook: "Verdadero o falso: ¿esto te puede reprobar? Responde y aprende.", approval: "pending", notes: "" },
+    ];
+
+    let rowsData = structuredClone(defaultRows);
+
+    function pillarPill(p) {
+      if (p === "E") return `<span class="pill pill-e">E</span>`;
+      if (p === "S") return `<span class="pill pill-s">S</span>`;
+      if (p === "M") return `<span class="pill pill-m">M</span>`;
+      return `<span class="pill pill-c">C</span>`;
+    }
+
+    function render() {
+      const tbody = document.getElementById("rows");
+      tbody.innerHTML = "";
+
+      rowsData.forEach((row, idx) => {
+        const tr = document.createElement("tr");
+        tr.className = "border-t border-white/30 align-top";
+        tr.dataset.idx = idx;
+
+        tr.innerHTML = `
+          <td class="p-3">
+            <input class="w-40 rounded-xl border border-slate-200 bg-white/80 px-2 py-2 text-sm"
+                   value="${escapeHtml(row.week)}"
+                   oninput="rowsData[${idx}].week=this.value" />
+          </td>
+
+          <td class="p-3">
+            <select class="w-32 rounded-xl border border-slate-200 bg-white/80 px-2 py-2 text-sm"
+                    onchange="rowsData[${idx}].format=this.value">
+              ${["Reel","Carrusel","Story","Post"].map(f => `<option ${row.format===f?"selected":""}>${f}</option>`).join("")}
+            </select>
+          </td>
+
+          <td class="p-3">
+            <div class="flex items-center gap-2">
+              ${pillarPill(row.pillar)}
+              <select class="rounded-xl border border-slate-200 bg-white/80 px-2 py-2 text-sm"
+                      onchange="rowsData[${idx}].pillar=this.value; render()">
+                ${["E","S","M","C"].map(p => `<option ${row.pillar===p?"selected":""}>${p}</option>`).join("")}
+              </select>
+            </div>
+          </td>
+
+          <td class="p-3">
+            <input class="w-[320px] rounded-xl border border-slate-200 bg-white/80 px-2 py-2 text-sm"
+                   value="${escapeHtml(row.title)}"
+                   oninput="rowsData[${idx}].title=this.value" />
+          </td>
+
+          <td class="p-3">
+            <textarea class="w-[340px] min-h-[70px] rounded-xl border border-slate-200 bg-white/80 px-2 py-2 text-sm"
+                      oninput="rowsData[${idx}].hook=this.value">${escapeHtml(row.hook)}</textarea>
+          </td>
+
+          <td class="p-3">
+            <div class="flex items-center gap-2">
+              <button class="btn btn-ghost px-3 py-2 ${row.approval==="up"?"ring-ok":""}"
+                      title="Aprobar"
+                      onclick="setApproval(${idx}, 'up')">👍</button>
+              <button class="btn btn-ghost px-3 py-2 ${row.approval==="down"?"ring-no":""}"
+                      title="Desaprobar"
+                      onclick="setApproval(${idx}, 'down')">👎</button>
+              <button class="btn btn-ghost px-3 py-2"
+                      title="Dejar pendiente"
+                      onclick="setApproval(${idx}, 'pending')">⏳</button>
+            </div>
+            <div class="text-xs text-slate-600 mt-2" id="applabel-${idx}">${approvalLabel(row.approval)}</div>
+          </td>
+
+          <td class="p-3">
+            <textarea class="w-[320px] min-h-[70px] rounded-xl border border-slate-200 bg-white/80 px-2 py-2 text-sm"
+                      placeholder="Observaciones, ajustes, CTA, tono, etc."
+                      oninput="rowsData[${idx}].notes=this.value">${escapeHtml(row.notes || "")}</textarea>
+            <div class="mt-2 flex justify-end">
+              <button class="btn btn-ghost px-3 py-2 text-sm" onclick="removeRow(${idx})">🗑️ Quitar</button>
+            </div>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+
+      updateSummary();
+    }
+
+    function approvalLabel(a) {
+      if (a === "up") return "Estado: APROBADO ✅";
+      if (a === "down") return "Estado: DESAPROBADO ❌";
+      return "Estado: PENDIENTE ⏳";
+    }
+
+    function setApproval(idx, val) {
+      rowsData[idx].approval = val;
+      render();
+    }
+
+    function addRow() {
+      rowsData.push({
+        week: "Semana X",
+        format: "Reel",
+        pillar: "E",
+        title: "Nuevo contenido",
+        hook: "Hook aquí…",
+        approval: "pending",
+        notes: ""
+      });
+      render();
+    }
+
+    function removeRow(idx) {
+      rowsData.splice(idx, 1);
+      render();
+    }
+
+    function saveLocal() {
+      const payload = {
+        projectName: document.getElementById("projectName").value.trim(),
+        periodName: document.getElementById("periodName").value.trim(),
+        extraEmail: document.getElementById("extraEmail").value.trim(),
+        rowsData
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      toast("Guardado ✅");
+    }
+
+    function loadLocal() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return toast("No hay guardado todavía 😅");
+      const payload = JSON.parse(raw);
+      document.getElementById("projectName").value = payload.projectName || "";
+      document.getElementById("periodName").value = payload.periodName || "";
+      document.getElementById("extraEmail").value = payload.extraEmail || "";
+      rowsData = payload.rowsData || structuredClone(defaultRows);
+      render();
+      toast("Cargado ✅");
+    }
+
+    function downloadJSON() {
+      const payload = {
+        projectName: document.getElementById("projectName").value.trim(),
+        periodName: document.getElementById("periodName").value.trim(),
+        extraEmail: document.getElementById("extraEmail").value.trim(),
+        rows: rowsData
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "parrilla_cda13.json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function downloadTXT() {
+      const text = buildSummaryText();
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "resumen_parrilla_cda13.txt";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function exportPDF() {
+      updateSummary();
+
+      const element = document.getElementById("summaryCard");
+      const opt = {
+        margin: 10,
+        filename: "parrilla_cda13_aprobaciones.pdf",
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+      };
+      html2pdf().set(opt).from(element).save();
+    }
+
+    function composeEmail() {
+      updateSummary();
+
+      const baseTo = "comercial.coldroncolombia@gmail.com";
+      const extra = document.getElementById("extraEmail").value.trim();
+      const to = extra ? `${baseTo},${extra}` : baseTo;
+
+      const subject = `${document.getElementById("projectName").value.trim()} | Aprobaciones ${document.getElementById("periodName").value.trim() || ""}`.trim();
+      const body = buildSummaryText();
+
+      // Mailto length safety
+      if (body.length > 1800) {
+        alert("El resumen está largo para algunos correos. Te descargué un TXT para adjuntarlo, y puedes enviar un correo corto con el archivo.");
+        downloadTXT();
+      }
+
+      const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.location.href = mailto;
+    }
+
+    function updateSummary() {
+      document.getElementById("summaryTitle").textContent = document.getElementById("projectName").value.trim() || "Resumen CDA 13";
+      document.getElementById("summaryMeta").textContent = (document.getElementById("periodName").value.trim() || "Periodo no especificado");
+      document.getElementById("summaryText").textContent = buildSummaryText();
+    }
+
+    function buildSummaryText() {
+      const project = document.getElementById("projectName").value.trim() || "CDA 13 - Parrilla Mensual";
+      const period = document.getElementById("periodName").value.trim() || "Periodo no especificado";
+
+      // Group by week
+      const groups = {};
+      rowsData.forEach(r => {
+        groups[r.week] = groups[r.week] || [];
+        groups[r.week].push(r);
+      });
+
+      let out = "";
+      out += `PROYECTO: ${project}\n`;
+      out += `PERIODO: ${period}\n`;
+      out += `FECHA: ${new Date().toLocaleString()}\n`;
+      out += `\n========================================\n\n`;
+
+      Object.keys(groups).forEach(week => {
+        out += `${week}\n`;
+        out += `----------------------------------------\n`;
+        groups[week].forEach((r, i) => {
+          const status = r.approval === "up" ? "APROBADO ✅" : (r.approval === "down" ? "DESAPROBADO ❌" : "PENDIENTE ⏳");
+          out += `${i+1}. [${r.format}] (Pilar ${r.pillar}) ${r.title}\n`;
+          out += `   Hook: ${r.hook}\n`;
+          out += `   Estado: ${status}\n`;
+          if (r.notes && r.notes.trim()) out += `   Obs: ${r.notes.trim()}\n`;
+          out += `\n`;
+        });
+        out += `\n`;
+      });
+
+      out += `========================================\n`;
+      out += `Enviado a: comercial.coldroncolombia@gmail.com\n`;
+      const extra = document.getElementById("extraEmail").value.trim();
+      if (extra) out += `Copia adicional: ${extra}\n`;
+
+      return out;
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    // Simple toast
+    function toast(msg) {
+      const t = document.createElement("div");
+      t.className = "fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-4 py-2 rounded-2xl shadow-soft z-50";
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 1800);
+    }
+
+    // Start
+    render();
+  </script>
+</body>
+</html>
