@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Programador Semanal - Liceo San León Magno</title>
+
+  <!-- Google Identity Services (OAuth access token) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- jsPDF + AutoTable -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.1/dist/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#f3f6fb;
+      --panel:#ffffff;
+      --panel2:#f8fafc;
+      --text:#0f172a;
+      --muted:#475569;
+      --line:#e2e8f0;
+      --accent:#1d4ed8;
+      --accent2:#0ea5e9;
+      --ok:#16a34a;
+      --warn:#d97706;
+      --bad:#dc2626;
+
+      --shadow: 0 14px 40px rgba(2,6,23,.10);
+      --shadow2: 0 10px 22px rgba(2,6,23,.08);
+      --radius:18px;
+      --radius2:14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: var(--bg);
+      color:var(--text);
+    }
+
+    header{
+      background:#0b1220;
+      color:#e5e7eb;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:0 14px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding:14px 0;
+      flex-wrap:wrap;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 260px;
+    }
+    .brand img{
+      width:44px;
+      height:44px;
+      border-radius: 12px;
+      background:#111827;
+      border: 1px solid rgba(255,255,255,.14);
+      object-fit: cover;
+    }
+    .brand h1{
+      margin:0;
+      font-size:15px;
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+    .brand .sub{
+      margin-top:3px;
+      font-size:12px;
+      color: rgba(229,231,235,.78);
+      line-height:1.2;
+    }
+
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:9px 12px;
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:999px;
+      background: rgba(255,255,255,.08);
+      font-size:12px;
+      color: rgba(229,231,235,.92);
+      font-family: var(--mono);
+      user-select:none;
+    }
+
+    main{ padding:16px 0 22px; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 430px 1fr;
+      gap:14px;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .panel{
+      background: var(--panel);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .panel .hd{
+      padding:14px 14px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background: var(--panel2);
+    }
+    .panel .hd strong{
+      font-size:13px;
+      letter-spacing:.2px;
+    }
+    .panel .bd{ padding:14px; }
+
+    .stack{ display:flex; flex-direction:column; gap:10px; }
+
+    .card{
+      background: #ffffff;
+      border:1px solid var(--line);
+      border-radius: var(--radius2);
+      padding:12px;
+      box-shadow: var(--shadow2);
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      justify-content:space-between;
+    }
+    .label{
+      color:var(--muted);
+      font-size:12px;
+      margin-bottom:4px;
+      font-weight:900;
+    }
+    .value{
+      font-size:13px;
+      line-height:1.3;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color:#0b1220;
+    }
+    .mini{
+      font-size:11px;
+      color: var(--muted);
+      margin-top:6px;
+      line-height:1.25;
+    }
+
+    .btn{
+      border:1px solid var(--line);
+      background: #ffffff;
+      color: #0b1220;
+      padding:10px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-weight:900;
+      font-size:12px;
+      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .2s ease;
+      user-select:none;
+      white-space:nowrap;
+      position: relative;
+      overflow: hidden;
+      outline: none;
+      text-decoration: none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
+    .btn::after{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.8), transparent);
+      transform: translateX(-120%) rotate(18deg);
+      transition: transform .55s ease;
+      pointer-events:none;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(2,6,23,.12);
+      border-color: #cbd5e1;
+      background: #ffffff;
+    }
+    .btn:hover::after{ transform: translateX(140%) rotate(18deg); }
+    .btn:active{ transform: translateY(0px) scale(.99); }
+    .btn:focus-visible{
+      box-shadow: 0 0 0 4px rgba(29,78,216,.18), 0 10px 24px rgba(2,6,23,.12);
+      border-color: rgba(29,78,216,.55);
+    }
+
+    .btn.small{ padding:8px 10px; border-radius: 12px; }
+    .btn.primary{
+      background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+      border-color: rgba(29,78,216,.25);
+      color:#fff;
+    }
+    .btn.primary:hover{ box-shadow: 0 14px 30px rgba(29,78,216,.22); }
+    .btn.good{
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      color:#fff;
+      border-color: rgba(22,163,74,.25);
+    }
+    .btn.warn{
+      background: linear-gradient(135deg, #d97706, #f59e0b);
+      color:#111827;
+      border-color: rgba(245,158,11,.25);
+    }
+    .btn.bad{
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      color:#fff;
+      border-color: rgba(220,38,38,.25);
+    }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: #fff;
+      box-shadow: var(--shadow2);
+    }
+    th, td{
+      padding:9px 10px;
+      border-bottom:1px solid var(--line);
+      vertical-align:top;
+      font-size:12px;
+    }
+    th{
+      color:#0b1220;
+      text-align:left;
+      background: #f8fafc;
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+    tr:last-child td{ border-bottom:none; }
+    .td-muted{ color: var(--muted); }
+
+    .paper{
+      background: #fff;
+      color:#111;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .paper .paper-hd{
+      padding:12px 14px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      background: #f8fafc;
+    }
+    .paper .paper-hd b{ font-size:12px; color:#0b1220; }
+    .paper .paper-bd{
+      padding:16px 18px 18px;
+      font-family: Arial, sans-serif;
+    }
+
+    .preview-head{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom: 10px;
+    }
+    .preview-head .left{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .preview-head img{
+      width:38px;
+      height:38px;
+      border-radius: 10px;
+      border:1px solid rgba(0,0,0,.12);
+      object-fit: cover;
+    }
+
+    .doc-subtitle{
+      text-align:center;
+      font-weight:800;
+      font-size:13px;
+      margin:6px 0 14px;
+    }
+    .line{
+      font-size:11px;
+      margin:4px 0;
+      line-height:1.35;
+    }
+    .box{
+      border:1px solid rgba(0,0,0,.25);
+      padding:6px 8px;
+      min-height:38px;
+      font-size:11px;
+      white-space: pre-wrap;
+    }
+    .doc-table{
+      width:100%;
+      border-collapse: collapse;
+      margin-top:10px;
+      font-size:10.5px;
+    }
+    .doc-table th, .doc-table td{
+      border:1px solid rgba(0,0,0,.25);
+      padding:6px 6px;
+      vertical-align: top;
+    }
+    .doc-table th{
+      background:#f3f3f3;
+      font-weight:800;
+    }
+
+    .status{
+      font-family: var(--mono);
+      font-size:11px;
+      color: #334155;
+      padding:10px 12px;
+      border-top:1px solid var(--line);
+      background: #f8fafc;
+      min-height: 44px;
+      white-space: pre-wrap;
+    }
+
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background: rgba(2,6,23,.60);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index: 50;
+    }
+    .modal{
+      width:min(720px, 100%);
+      background: #ffffff;
+      border:1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modal .mhd{
+      padding:12px 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      border-bottom:1px solid var(--line);
+      background: #f8fafc;
+    }
+    .modal .mhd b{ font-size:13px; color:#0b1220; }
+    .modal .mbd{ padding:14px; }
+    .modal label{
+      display:block;
+      font-size:12px;
+      color: #334155;
+      margin:0 0 6px;
+      font-weight:900;
+    }
+    .modal input, .modal textarea, .modal select{
+      width:100%;
+      border:1px solid #cbd5e1;
+      background: #ffffff;
+      color: #0b1220;
+      border-radius: 14px;
+      padding:10px 11px;
+      outline:none;
+      font-size:13px;
+      transition: box-shadow .12s ease, border-color .12s ease;
+    }
+    .modal input:focus, .modal textarea:focus, .modal select:focus{
+      border-color: rgba(29,78,216,.55);
+      box-shadow: 0 0 0 4px rgba(29,78,216,.14);
+    }
+    .modal textarea{ min-height: 120px; resize: vertical; }
+    .modal .mft{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      padding:12px 14px;
+      border-top:1px solid var(--line);
+      background: #f8fafc;
+    }
+    .two{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 640px){
+      .two{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <img id="crestTop" alt="Escudo del colegio" />
+        <div>
+          <h1>Programador Semanal</h1>
+          <div class="sub">Liceo San León Magno · PDF diligenciado + Drive institucional</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn warn" id="btnConnect">Conectar Drive</button>
+        <a class="btn" id="btnOpenFolder" target="_blank" rel="noopener">Abrir carpeta Drive</a>
+        <div class="pill" id="drivePill">Drive: sin conectar</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid">
+    <section class="panel">
+      <div class="hd">
+        <strong>1) Diligenciar datos</strong>
+        <span style="font-size:12px;color:#64748b;font-weight:900;">Todo se llena con botones</span>
+      </div>
+
+      <div class="bd">
+        <div class="stack" id="cards"></div>
+
+        <div class="card" style="margin-top:12px;">
+          <div class="row">
+            <div>
+              <div class="label">Filas (Grado / I.H / Tema / Indicador / Metodología)</div>
+              <div class="mini">Agrega filas por curso y edita con “Editar”.</div>
+            </div>
+            <button class="btn primary small" id="btnAddRow">+ Agregar fila</button>
+          </div>
+
+          <div style="margin-top:10px; overflow:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:14%;">GRADO</th>
+                  <th style="width:8%;">I.H</th>
+                  <th style="width:18%;">TEMA</th>
+                  <th style="width:26%;">INDICADOR</th>
+                  <th style="width:26%;">METODOLOGÍA</th>
+                  <th style="width:8%;">ACC.</th>
+                </tr>
+              </thead>
+              <tbody id="rowsTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+          <div class="row" style="align-items:center;">
+            <div>
+              <div class="label">2) Final</div>
+              <div class="value">Genera el PDF, lo descarga y lo guarda en Drive.</div>
+              <div class="mini">Carpeta fija: 1RKuxumBTCc3C-f-qC6IqfdeVIHHVbo7q</div>
+            </div>
+            <button class="btn good" id="btnGenerate">Descargar PDF + Guardar en Drive</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="status" id="status">Estado: listo.</div>
+    </section>
+
+    <section class="paper">
+      <div class="paper-hd">
+        <b>Vista previa</b>
+        <span style="font-family:var(--mono);font-size:11px;color:#475569" id="fileNamePreview">Programador_Semanal.pdf</span>
+      </div>
+      <div class="paper-bd" id="preview"></div>
+    </section>
+  </div>
+</main>
+
+<!-- Modal campo -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="mhd">
+      <b id="modalTitle">Diligenciar</b>
+      <button class="btn small" id="btnCloseModal">Cerrar</button>
+    </div>
+    <div class="mbd">
+      <label id="modalLabel" for="modalInput">Valor</label>
+      <input id="modalInput" type="text" />
+      <textarea id="modalTextarea" style="display:none;"></textarea>
+    </div>
+    <div class="mft">
+      <button class="btn" id="btnCancelModal">Cancelar</button>
+      <button class="btn primary" id="btnSaveModal">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal fila -->
+<div class="modal-backdrop" id="rowBackdrop">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="mhd">
+      <b id="rowTitle">Fila</b>
+      <button class="btn small" id="btnCloseRow">Cerrar</button>
+    </div>
+    <div class="mbd">
+      <div class="two">
+        <div>
+          <label>Grado (selección)</label>
+          <select id="rGrado"></select>
+        </div>
+        <div>
+          <label>I.H</label>
+          <input id="rIH" placeholder="Ej: 2" />
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <label>Tema específico</label>
+        <textarea id="rTema" placeholder="Tema..."></textarea>
+      </div>
+      <div style="margin-top:10px;">
+        <label>Indicador de logro</label>
+        <textarea id="rIndicador" placeholder="Indicador..."></textarea>
+      </div>
+      <div style="margin-top:10px;">
+        <label>Metodología</label>
+        <textarea id="rMetodologia" placeholder="Metodología..."></textarea>
+      </div>
+    </div>
+    <div class="mft">
+      <button class="btn bad" id="btnDeleteRow">Eliminar fila</button>
+      <div style="flex:1;"></div>
+      <button class="btn" id="btnCancelRow">Cancelar</button>
+      <button class="btn primary" id="btnSaveRow">Guardar fila</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===================== CONFIG =====================
+  const GOOGLE_CLIENT_ID = "583975004259-pjugvgrp9njun7ti52b3k7jf61b1ro26.apps.googleusercontent.com";
+
+  const DRIVE_FOLDER_ID  = "1RKuxumBTCc3C-f-qC6IqfdeVIHHVbo7q";
+  const DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/1RKuxumBTCc3C-f-qC6IqfdeVIHHVbo7q";
+
+  const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+
+  // Recomendación: súbelo luego al dominio del cole para evitar bloqueos de hotlink:
+  // ej: https://liceosanleonmagno.edu.co/assets/escudo.png
+  const CREST_URL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhSk8hOgQoj39n6kc4q7mOBd5F7WuEs1BBQA&s";
+
+  // ===================== STATE =====================
+  const state = {
+    anio: "2025",
+    profesor: "",
+    asignatura: "",
+    semanaDel: "",
+    semanaAl: "",
+    mes: "",
+    horasSemanales: "",
+    ejeTransversal: "",
+    valorFortalecer: "",
+    revisadoPor: "",
+    observaciones: "",
+    filas: []
+  };
+
+  const GRADOS = [
+    "Kínder","Transición",
+    "Primero","Segundo","Tercero","Cuarto","Quinto",
+    "Sexto","Séptimo","Octavo","Noveno",
+    "Décimo","Undécimo"
+  ];
+
+  // Auth
+  let accessToken = null;
+  let tokenClient = null;
+
+  // ===================== HELPERS =====================
+  const $ = (sel) => document.querySelector(sel);
+  const esc = (s) => (s ?? "").toString().replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const nz  = (s, fallback="") => (s && s.toString().trim().length) ? s.toString().trim() : fallback;
+
+  function setStatus(msg){ $("#status").textContent = "Estado: " + msg; }
+
+  function currentFileName(){
+    const prof = state.profesor ? state.profesor.trim().replace(/\s+/g,"_") : "SinProfesor";
+    const asig = state.asignatura ? state.asignatura.trim().replace(/\s+/g,"_") : "SinAsignatura";
+    const del = state.semanaDel ? state.semanaDel.trim().replace(/\s+/g,"") : "xx";
+    const al  = state.semanaAl ? state.semanaAl.trim().replace(/\s+/g,"") : "xx";
+    return `Programador_Semanal_${state.anio}_${prof}_${asig}_Del${del}_Al${al}.pdf`.slice(0, 180);
+  }
+
+  function updateDrivePill(){
+    const pill = $("#drivePill");
+    if(accessToken){
+      pill.textContent = "Drive: conectado";
+      pill.style.background = "rgba(22,163,74,.22)";
+      pill.style.borderColor = "rgba(22,163,74,.35)";
+    } else {
+      pill.textContent = "Drive: sin conectar";
+      pill.style.background = "rgba(255,255,255,.08)";
+      pill.style.borderColor = "rgba(255,255,255,.14)";
+    }
+  }
+
+  // ===================== OAUTH (PROMISE FIX) =====================
+  function ensureTokenClient(){
+    if(tokenClient) return;
+
+    if(!GOOGLE_CLIENT_ID){
+      setStatus("Falta GOOGLE_CLIENT_ID.");
+      throw new Error("Falta GOOGLE_CLIENT_ID.");
+    }
+
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: DRIVE_SCOPE,
+      callback: () => {}
+    });
+  }
+
+  function requestDriveToken(){
+    ensureTokenClient();
+
+    return new Promise((resolve, reject) => {
+      tokenClient.callback = (resp) => {
+        if(resp && resp.access_token){
+          accessToken = resp.access_token;
+          updateDrivePill();
+          setStatus("Drive conectado ✅");
+          resolve(accessToken);
+        } else {
+          reject(new Error("No se obtuvo token de Drive."));
+        }
+      };
+
+      // prompt: "" intenta silencioso; si no se puede, Google muestra consentimiento
+      try{
+        tokenClient.requestAccessToken({ prompt: "" });
+      } catch(e){
+        reject(e);
+      }
+    });
+  }
+
+  async function connectDrive(){
+    setStatus("Solicitando permisos de Drive…");
+    await requestDriveToken();
+  }
+
+  // ===================== MODAL CAMPO =====================
+  const modal = { fieldKey: null, multiline: false };
+
+  function openFieldModal(title, label, fieldKey, multiline=false){
+    modal.fieldKey = fieldKey;
+    modal.multiline = multiline;
+
+    $("#modalTitle").textContent = title;
+    $("#modalLabel").textContent = label;
+
+    const inp = $("#modalInput");
+    const ta  = $("#modalTextarea");
+
+    if(multiline){
+      inp.style.display = "none";
+      ta.style.display = "block";
+      ta.value = state[fieldKey] ?? "";
+      ta.focus();
+    } else {
+      ta.style.display = "none";
+      inp.style.display = "block";
+      inp.value = state[fieldKey] ?? "";
+      inp.focus();
+    }
+    $("#modalBackdrop").style.display = "flex";
+  }
+
+  function closeFieldModal(){
+    $("#modalBackdrop").style.display = "none";
+    modal.fieldKey = null;
+  }
+
+  function saveFieldModal(){
+    if(!modal.fieldKey) return;
+    const val = modal.multiline ? $("#modalTextarea").value : $("#modalInput").value;
+    state[modal.fieldKey] = val;
+    closeFieldModal();
+    renderAll();
+  }
+
+  // ===================== MODAL FILA =====================
+  let editingRowIndex = null;
+
+  function fillGradosSelect(){
+    const sel = $("#rGrado");
+    sel.innerHTML = `<option value="">Seleccione…</option>` +
+      GRADOS.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join("");
+  }
+
+  function openRowModal(index=null){
+    editingRowIndex = index;
+    const isEdit = index !== null && index !== undefined;
+
+    $("#rowTitle").textContent = isEdit ? `Editar fila #${index+1}` : "Nueva fila";
+    $("#btnDeleteRow").style.display = isEdit ? "inline-flex" : "none";
+
+    const row = isEdit ? state.filas[index] : {grado:"", ih:"", tema:"", indicador:"", metodologia:""};
+
+    $("#rGrado").value = row.grado ?? "";
+    $("#rIH").value = row.ih ?? "";
+    $("#rTema").value = row.tema ?? "";
+    $("#rIndicador").value = row.indicador ?? "";
+    $("#rMetodologia").value = row.metodologia ?? "";
+
+    $("#rowBackdrop").style.display = "flex";
+    $("#rGrado").focus();
+  }
+
+  function closeRowModal(){
+    $("#rowBackdrop").style.display = "none";
+    editingRowIndex = null;
+  }
+
+  function saveRowModal(){
+    const row = {
+      grado: $("#rGrado").value,
+      ih: $("#rIH").value,
+      tema: $("#rTema").value,
+      indicador: $("#rIndicador").value,
+      metodologia: $("#rMetodologia").value
+    };
+    if(editingRowIndex === null){
+      state.filas.push(row);
+    } else {
+      state.filas[editingRowIndex] = row;
+    }
+    closeRowModal();
+    renderAll();
+  }
+
+  function deleteRow(){
+    if(editingRowIndex === null) return;
+    state.filas.splice(editingRowIndex, 1);
+    closeRowModal();
+    renderAll();
+  }
+
+  // ===================== RENDER =====================
+  const fieldCards = [
+    {key:"anio", label:"Año", title:"Año del programador", multiline:false},
+    {key:"profesor", label:"Profesor", title:"Profesor", multiline:false},
+    {key:"asignatura", label:"Asignatura", title:"Asignatura", multiline:false},
+    {key:"semanaDel", label:"Semana del (día)", title:"Semana del", multiline:false},
+    {key:"semanaAl", label:"Semana al (día)", title:"Semana al", multiline:false},
+    {key:"mes", label:"Mes (o rango, ej: FEB - MAR)", title:"Mes / Rango", multiline:false},
+    {key:"horasSemanales", label:"Horas semanales", title:"Horas semanales", multiline:false},
+    {key:"ejeTransversal", label:"Eje transversal", title:"Eje transversal", multiline:true},
+    {key:"valorFortalecer", label:"Valor a fortalecer", title:"Valor a fortalecer", multiline:false},
+    {key:"revisadoPor", label:"Revisado por", title:"Revisado por", multiline:false},
+    {key:"observaciones", label:"Observaciones", title:"Observaciones", multiline:true}
+  ];
+
+  function renderCards(){
+    const host = $("#cards");
+    host.innerHTML = "";
+
+    for(const f of fieldCards){
+      const v = state[f.key] ?? "";
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="row">
+          <div style="min-width:0;">
+            <div class="label">${esc(f.label)}</div>
+            <div class="value">${esc(v || "(sin diligenciar)")}</div>
+          </div>
+          <button class="btn small primary" data-field="${esc(f.key)}">Diligenciar</button>
+        </div>
+      `;
+      host.appendChild(card);
+    }
+
+    host.querySelectorAll("button[data-field]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const key = btn.getAttribute("data-field");
+        const def = fieldCards.find(x=>x.key===key);
+        openFieldModal(def.title, def.label, def.key, def.multiline);
+      });
+    });
+  }
+
+  function renderRows(){
+    const tb = $("#rowsTbody");
+    tb.innerHTML = "";
+
+    if(state.filas.length === 0){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="6" class="td-muted">Sin filas. Toca “Agregar fila”.</td>`;
+      tb.appendChild(tr);
+      return;
+    }
+
+    state.filas.forEach((r, idx)=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${esc(r.grado || "")}</td>
+        <td>${esc(r.ih || "")}</td>
+        <td>${esc(r.tema || "")}</td>
+        <td>${esc(r.indicador || "")}</td>
+        <td>${esc(r.metodologia || "")}</td>
+        <td><button class="btn small" data-editrow="${idx}">Editar</button></td>
+      `;
+      tb.appendChild(tr);
+    });
+
+    tb.querySelectorAll("button[data-editrow]").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        openRowModal(parseInt(b.getAttribute("data-editrow"),10));
+      });
+    });
+  }
+
+  function renderPreview(){
+    $("#fileNamePreview").textContent = currentFileName();
+
+    const filasHtml = (state.filas.length ? state.filas : Array.from({length:6}, ()=>({}))).map(r=>`
+      <tr>
+        <td>${esc(r.grado || "")}</td>
+        <td>${esc(r.ih || "")}</td>
+        <td>${esc(r.tema || "")}</td>
+        <td>${esc(r.indicador || "")}</td>
+        <td>${esc(r.metodologia || "")}</td>
+      </tr>
+    `).join("");
+
+    $("#preview").innerHTML = `
+      <div class="preview-head">
+        <div class="left">
+          <img alt="Escudo" src="${esc(CREST_URL)}" />
+          <div style="font-size:11px;color:#334155;line-height:1.2;">
+            <div style="font-weight:900;color:#0b1220;">LICEO SAN LEÓN MAGNO LTDA</div>
+            <div>Formato: Programador Semanal</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#334155;font-family:var(--mono);">
+          ${esc(state.anio || "2025")}
+        </div>
+      </div>
+
+      <p class="doc-subtitle">PROGRAMADOR SEMANAL AÑO ${esc(state.anio)}</p>
+
+      <div class="line">
+        <b>PROFESOR:</b> ${esc(nz(state.profesor,""))}
+        &nbsp;&nbsp;&nbsp;<b>ASIGNATURA:</b> ${esc(nz(state.asignatura,""))}
+      </div>
+      <div class="line">
+        <b>SEMANA DEL</b> ${esc(nz(state.semanaDel,""))}
+        <b>AL</b> ${esc(nz(state.semanaAl,""))}
+        <b>DE</b> ${esc(nz(state.mes,""))}
+        &nbsp;&nbsp;&nbsp;<b>HORAS SEMANALES</b> ${esc(nz(state.horasSemanales,""))}
+      </div>
+
+      <div class="line" style="margin-top:8px;"><b>EJE TRANSVERSAL:</b></div>
+      <div class="box">${esc(state.ejeTransversal || "")}</div>
+
+      <div class="line" style="margin-top:8px;"><b>VALOR A FORTALECER:</b> ${esc(state.valorFortalecer || "")}</div>
+
+      <table class="doc-table">
+        <thead>
+          <tr>
+            <th>GRADO</th>
+            <th>I.H</th>
+            <th>TEMA ESPECIFICO</th>
+            <th>INDICADOR DE LOGRO</th>
+            <th>METODOLOGIA</th>
+          </tr>
+        </thead>
+        <tbody>${filasHtml}</tbody>
+      </table>
+
+      <div class="line" style="margin-top:10px;"><b>REVISADO POR:</b> ${esc(state.revisadoPor || "")}</div>
+      <div class="line"><b>OBSERVACIONES:</b></div>
+      <div class="box" style="min-height:60px;">${esc(state.observaciones || "")}</div>
+    `;
+  }
+
+  function renderAll(){
+    renderCards();
+    renderRows();
+    renderPreview();
+    updateDrivePill();
+  }
+
+  // ===================== DRIVE UPLOAD =====================
+  async function blobToBase64(blob){
+    const arrBuf = await blob.arrayBuffer();
+    let binary = "";
+    const bytes = new Uint8Array(arrBuf);
+    const chunkSize = 0x8000;
+    for(let i=0; i<bytes.length; i+=chunkSize){
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunkSize));
+    }
+    return btoa(binary);
+  }
+
+  async function uploadPdfToDrive(pdfBlob, filename){
+    if(!accessToken){
+      await requestDriveToken();
+    }
+
+    setStatus("Subiendo PDF a Drive…");
+
+    const metadata = {
+      name: filename,
+      mimeType: "application/pdf",
+      parents: [DRIVE_FOLDER_ID]
+    };
+
+    const boundary = "-------314159265358979323846";
+    const delimiter = "\r\n--" + boundary + "\r\n";
+    const closeDelim = "\r\n--" + boundary + "--";
+
+    const base64Data = await blobToBase64(pdfBlob);
+
+    const multipartBody =
+      delimiter +
+      "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+      JSON.stringify(metadata) +
+      delimiter +
+      "Content-Type: application/pdf\r\n" +
+      "Content-Transfer-Encoding: base64\r\n\r\n" +
+      base64Data +
+      closeDelim;
+
+    const url = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true";
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + accessToken,
+        "Content-Type": "multipart/related; boundary=" + boundary
+      },
+      body: multipartBody
+    });
+
+    const json = await res.json();
+    if(!res.ok){
+      throw new Error("Drive error: " + JSON.stringify(json));
+    }
+
+    setStatus("Guardado en Drive ✅ (File ID: " + json.id + ")");
+    return json;
+  }
+
+  // ===================== PDF =====================
+  async function generatePdfBlob(){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation:"p", unit:"mm", format:"letter" });
+
+    const marginX = 15;
+    let y = 16;
+
+    doc.setFont("helvetica","bold");
+    doc.setFontSize(12);
+    doc.text("LICEO SAN LEÓN MAGNO LTDA", 108, y, { align:"center" }); y += 6;
+    doc.text(`PROGRAMADOR SEMANAL AÑO ${state.anio || "2025"}`, 108, y, { align:"center" }); y += 10;
+
+    doc.setFont("helvetica","normal");
+    doc.setFontSize(10);
+
+    const linea1 = `PROFESOR: ${state.profesor || ""}    ASIGNATURA: ${state.asignatura || ""}`;
+    doc.text(doc.splitTextToSize(linea1, 190), marginX, y); y += 7;
+
+    const linea2 = `SEMANA DEL ${state.semanaDel || ""} AL ${state.semanaAl || ""} DE ${state.mes || ""}    HORAS SEMANALES ${state.horasSemanales || ""}`;
+    doc.text(doc.splitTextToSize(linea2, 190), marginX, y); y += 8;
+
+    doc.setFont("helvetica","bold");
+    doc.text("EJE TRANSVERSAL:", marginX, y); y += 5;
+    doc.setFont("helvetica","normal");
+
+    const ejeLines = doc.splitTextToSize(state.ejeTransversal || "", 190);
+    doc.rect(marginX, y, 190, 18);
+    doc.text(ejeLines.slice(0, 4), marginX+2, y+5);
+    y += 22;
+
+    doc.setFont("helvetica","bold");
+    doc.text("VALOR A FORTALECER:", marginX, y);
+    doc.setFont("helvetica","normal");
+    doc.text(state.valorFortalecer || "", marginX + 42, y);
+    y += 6;
+
+    const rows = (state.filas.length ? state.filas : []).map(r=>[
+      r.grado || "",
+      r.ih || "",
+      r.tema || "",
+      r.indicador || "",
+      r.metodologia || ""
+    ]);
+
+    doc.autoTable({
+      startY: y,
+      head: [["GRADO","I.H","TEMA ESPECIFICO","INDICADOR DE LOGRO","METODOLOGIA"]],
+      body: rows.length ? rows : [["","","","",""]],
+      styles: { font:"helvetica", fontSize:9, cellPadding:2, valign:"top" },
+      headStyles: { fillColor: [240,240,240], textColor:[20,20,20] },
+      margin: { left: marginX, right: marginX }
+    });
+
+    y = doc.lastAutoTable.finalY + 8;
+
+    doc.setFont("helvetica","bold");
+    doc.text("REVISADO POR:", marginX, y);
+    doc.setFont("helvetica","normal");
+    doc.text(state.revisadoPor || "", marginX + 30, y);
+    y += 7;
+
+    doc.setFont("helvetica","bold");
+    doc.text("OBSERVACIONES:", marginX, y); y += 4;
+    doc.setFont("helvetica","normal");
+    doc.rect(marginX, y, 190, 28);
+    const obsLines = doc.splitTextToSize(state.observaciones || "", 186);
+    doc.text(obsLines.slice(0, 7), marginX+2, y+5);
+
+    const blob = doc.output("blob");
+    return { blob, filename: currentFileName(), doc };
+  }
+
+  // ===================== EVENTS =====================
+  function wire(){
+    $("#btnCloseModal").addEventListener("click", closeFieldModal);
+    $("#btnCancelModal").addEventListener("click", closeFieldModal);
+    $("#btnSaveModal").addEventListener("click", saveFieldModal);
+
+    $("#modalBackdrop").addEventListener("click", (e)=>{
+      if(e.target.id === "modalBackdrop") closeFieldModal();
+    });
+
+    $("#btnAddRow").addEventListener("click", ()=>openRowModal(null));
+    $("#btnCloseRow").addEventListener("click", closeRowModal);
+    $("#btnCancelRow").addEventListener("click", closeRowModal);
+    $("#btnSaveRow").addEventListener("click", saveRowModal);
+    $("#btnDeleteRow").addEventListener("click", deleteRow);
+
+    $("#rowBackdrop").addEventListener("click", (e)=>{
+      if(e.target.id === "rowBackdrop") closeRowModal();
+    });
+
+    $("#btnConnect").addEventListener("click", connectDrive);
+
+    $("#btnGenerate").addEventListener("click", async ()=>{
+      try{
+        setStatus("Generando PDF…");
+        const { blob, filename, doc } = await generatePdfBlob();
+
+        doc.save(filename);
+
+        setStatus("PDF descargado. Subiendo a Drive…");
+        await uploadPdfToDrive(blob, filename);
+
+      } catch(e){
+        console.error(e);
+        setStatus("Error: " + (e?.message || e));
+      }
+    });
+
+    $("#btnOpenFolder").setAttribute("href", DRIVE_FOLDER_URL);
+  }
+
+  // ===================== INIT =====================
+  document.addEventListener("DOMContentLoaded", ()=>{
+    $("#crestTop").setAttribute("src", CREST_URL);
+    fillGradosSelect();
+    wire();
+    renderAll();
+    setStatus("Listo. Diligencia con botones y guarda en Drive con un clic.");
+  });
+</script>
+</body>
+</html>
